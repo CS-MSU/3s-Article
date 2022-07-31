@@ -1,1 +1,1 @@
-# 3s-Article
+# Moscow State University - Article
