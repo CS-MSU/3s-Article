@@ -209,10 +209,11 @@ def checkVAP(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def product_columns(n: int, x1: int, x2: int):
-    logging.info(f"Compute weathe scenarios: {x1} {x2}")
+    logging.info(f"Compute weather scenarios: {x1} {x2}")
+    print(f"Compute weather scenarios: {x1} {x2}")
     cols = ["crop", "year", "WOFOST_FLD", "weather_uuid"]
     general_df = pd.DataFrame(columns=cols)
-    dirname = "predicted_weather"
+    dirname = "/trinity/home/m.gasanov/agriculture/3s-Article/predicted_weather/"
     logging.info("Read weather files")
     irrad = pd.read_csv(os.path.join(dirname, "interval_data/irrad.csv"))
     irrad = checkIrrad(irrad)
@@ -251,15 +252,15 @@ def product_columns(n: int, x1: int, x2: int):
                     os.remove(fname)
                     # save data
                     if len(general_df) % 1000 == 0:
-                        dirname = "./results/"
-                        general_fname = os.path.join(dirname, f"WOFOST_{x1}_{x2}.csv")
+                        dirname_out = "/gpfs/gpfs0/gasanov_lab/WOFOST/"
+                        general_fname = os.path.join(dirname_out, f"WOFOST_{x1}_{x2}.csv")
                         general_df.to_csv(general_fname, index=False)
 
     return general_df
 
 
 def main(x1: int, x2: int):
-    all_files = product_columns(n=8, x1=0, x2=1)
+    all_files = product_columns(n=8, x1=x1, x2=x2)
 
 
 if __name__ == "__main__":
