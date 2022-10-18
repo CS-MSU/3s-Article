@@ -1,0 +1,1 @@
+python3 run_wofost.py --x1 0 --x2 1
