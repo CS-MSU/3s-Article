@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/trinity/home/m.gasanov/agriculture/3s-Article/run_wofost.py", line 296, in <module>
+    main(x1=args.x1, x2=args.x2)
+  File "/trinity/home/m.gasanov/agriculture/3s-Article/run_wofost.py", line 280, in main
+    all_files = product_columns(n=8, x1=x1, x2=x2)
+  File "/trinity/home/m.gasanov/agriculture/3s-Article/run_wofost.py", line 267, in product_columns
+    os.remove(fname)
+FileNotFoundError: [Errno 2] No such file or directory: '/trinity/home/m.gasanov/agriculture/3s-Article/predicted_weather/interval_data/3_3_0_0_0_0.csv'

@@ -252,8 +252,10 @@ def product_columns(n: int, x1: int, x2: int):
                     tmp["WIND"] = wind[f"WIND_{x5}"]
                     tmp["RAIN"] = rain[f"RAIN_{x6}"]
                     tmp["SNOWDEPTH"] = low[["SNOWDEPTH"]]
+                    folder_temp_weather = '/gpfs/data/gpfs0/gasanov_lab/WOFOST/weather'
+                    os.makedirs(f'/gpfs/gpfs0/gasanov_lab/WOFOST/weather/weather_{x1}{x2}',exist_ok=True)
                     fname = os.path.join(
-                        dirname, f"interval_data/{x1}_{x2}_{x3}_{x4}_{x5}_{x6}.csv"
+                        folder_temp_weather, f"weather_{x1}{x2}/{x1}_{x2}_{x3}_{x4}_{x5}_{x6}.csv"
                     )
 
                     weather_uuid = f"{x1}_{x2}_{x3}_{x4}_{x5}_{x6}"
@@ -264,9 +266,9 @@ def product_columns(n: int, x1: int, x2: int):
                         weather_fname=fname,
                         uuid_code=weather_uuid,
                     )
-                    os.remove(fname)
-                    path_to_WOFOST_weather = os.path.splitext(fname)[0] + "_WOFOST.csv"
-                    os.remove(path_to_WOFOST_weather)
+                    #os.remove(fname)
+                    #path_to_WOFOST_weather = os.path.splitext(fname)[0] + "_WOFOST.csv"
+                    #os.remove(path_to_WOFOST_weather)
                     # save data
                     if len(general_df) % 1000 == 0:
                         dirname_out = "/gpfs/gpfs0/gasanov_lab/WOFOST/"
