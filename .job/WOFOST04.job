@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=02_WOFOST.job
-#SBATCH --output=/trinity/home/m.gasanov/agriculture/3s-Article/.out/OUT_02.out
-#SBATCH --error=/trinity/home/m.gasanov/agriculture/3s-Article/.out/ERR_02.err
-#SBATCH --time=1-00:00
-#SBATCH --mem=8000
+#SBATCH --job-name=04_WOFOST.job
+#SBATCH --output=/trinity/home/m.gasanov/agriculture/3s-Article/.out/OUT_04.out
+#SBATCH --error=/trinity/home/m.gasanov/agriculture/3s-Article/.out/ERR_04.err
+#SBATCH --time=2-00:00
+#SBATCH --mem=12000
 #SBATCH --ntasks=1
 #SBATCH --partition=cpu 
 #SBATCH --mail-type=ALL

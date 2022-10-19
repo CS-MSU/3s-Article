@@ -2,8 +2,8 @@
 #SBATCH --job-name=01_WOFOST.job
 #SBATCH --output=/trinity/home/m.gasanov/agriculture/3s-Article/.out/OUT_01.out
 #SBATCH --error=/trinity/home/m.gasanov/agriculture/3s-Article/.out/ERR_01.err
-#SBATCH --time=2-00:00
-#SBATCH --mem=12000
+#SBATCH --time=1-00:00
+#SBATCH --mem=8000
 #SBATCH --ntasks=1
 #SBATCH --partition=cpu 
 #SBATCH --mail-type=ALL

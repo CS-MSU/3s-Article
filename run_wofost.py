@@ -50,8 +50,9 @@ def prepareWeather(in_fname: str):
     weather_df.to_csv(
         path_to_save_csv_file, mode="a", header=False, index=False, na_rep="NaN"
     )
-    weather = CSVWeatherDataProvider(path_to_save_csv_file)
-    os.remove(path_to_save_csv_file)
+    weather = CSVWeatherDataProvider(path_to_save_csv_file, force_reload=True)
+    
+    # os.remove(path_to_save_csv_file)
     return weather
 
 
@@ -127,6 +128,8 @@ def run_wofost(
         TimedEvents: null
         StateEvents: null
     """
+    """
+    """
     agro = yaml.safe_load(agro_yaml)
 
     firstkey = list(agro[0])[0]
@@ -190,7 +193,7 @@ def computeCrop(general_df: pd.DataFrame, weather_fname: str, uuid_code: str):
                 crop_variety=cropsDict[crop],
                 crop_end_type="harvest",
             )
-            water_limited_df = pd.DataFrame(crop_model_yield["FLD"])
+            # water_limited_df = pd.DataFrame(crop_model_yield["FLD"])
             water_limited_yield = crop_model_yield["FLD"][-1]["TWSO"]
             df.loc[len(df)] = [crop, year, water_limited_yield, uuid_code]
     return pd.concat([general_df, df])
@@ -207,11 +210,23 @@ def checkVAP(df: pd.DataFrame) -> pd.DataFrame:
     df = df.applymap(lambda x: 199.3 - 1 if x > 199.3 else x)
     return df
 
+def checkWind(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.applymap(lambda x: 0.07 if x < 0.00 else x)
+    return df
 
 def product_columns(n: int, x1: int, x2: int):
     logging.info(f"Compute weather scenarios: {x1} {x2}")
     print(f"Compute weather scenarios: {x1} {x2}")
     cols = ["crop", "year", "WOFOST_FLD", "weather_uuid"]
+
+    try:
+        dirname_out = "/gpfs/gpfs0/gasanov_lab/WOFOST/"
+        valid_df = pd.read_csv(os.path.join(dirname_out, f"WOFOST_{x1}_{x2}.csv"))
+        if len(valid_df)==96000:
+            print('All simulations done!')
+            return 'Finished'
+    except Exception as e:
+        pass
     general_df = pd.DataFrame(columns=cols)
     dirname = "/trinity/home/m.gasanov/agriculture/3s-Article/predicted_weather/"
     logging.info("Read weather files")
@@ -221,11 +236,11 @@ def product_columns(n: int, x1: int, x2: int):
     tmax = pd.read_csv(os.path.join(dirname, "interval_data/tmax.csv"))
     vap = pd.read_csv(os.path.join(dirname, "interval_data/vap.csv"))
     vap = checkVAP(vap)
-    wind = pd.read_csv(os.path.join(dirname, "interval_data/wind.csv"))
+    wind = pd.read_csv(os.path.join(dirname, 'interval_data/wind.csv'))
+    wind = checkWind(wind)
     rain = pd.read_csv(os.path.join(dirname, "interval_data/rain.csv"))
     low = pd.read_csv(os.path.join(dirname, "prophet_low.csv"))
     for x3 in range(n + 1):
-
         for x4 in range(n + 1):
             for x5 in range(n + 1):
                 for x6 in range(n + 1):
@@ -250,6 +265,8 @@ def product_columns(n: int, x1: int, x2: int):
                         uuid_code=weather_uuid,
                     )
                     os.remove(fname)
+                    path_to_WOFOST_weather = os.path.splitext(fname)[0] + "_WOFOST.csv"
+                    os.remove(path_to_WOFOST_weather)
                     # save data
                     if len(general_df) % 1000 == 0:
                         dirname_out = "/gpfs/gpfs0/gasanov_lab/WOFOST/"
