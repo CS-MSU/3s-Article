@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH --job-name=Batch_WOFOST.job
+#SBATCH --output=/trinity/home/m.gasanov/agriculture/3s-Article/.out/OUT_Total.out
+#SBATCH --error=/trinity/home/m.gasanov/agriculture/3s-Article/.out/ERR_Total.err
+#SBATCH --time=2-00:00
+#SBATCH --mem=12000
+#SBATCH --ntasks=24
+#SBATCH --partition=cpu 
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=m.gasanov@skoltech.ru
+for i in {0..4};do
+    for j in {0..6};do
+        srun /trinity/shared/opt/python-3.6.8/bin/python3.6 /trinity/home/m.gasanov/agriculture/3s-Article/run_wofost.py --x1 $i --x2 $j
+    done
+done

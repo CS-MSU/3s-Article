@@ -1,9 +1,11 @@
+from shutil import ExecError
 import numpy as np
 import os, yaml
 import datetime as dt
 from dateutil.parser import parse
 import pandas as pd
 import logging
+from shutil import copy2
 
 # Plotting
 import datetime as dt
@@ -50,9 +52,14 @@ def prepareWeather(in_fname: str):
     weather_df.to_csv(
         path_to_save_csv_file, mode="a", header=False, index=False, na_rep="NaN"
     )
-    weather = CSVWeatherDataProvider(path_to_save_csv_file)
-    os.remove(path_to_save_csv_file)
-    return weather
+    try: 
+        weather = CSVWeatherDataProvider(path_to_save_csv_file, force_reload=True)
+        return weather
+    except Exception as e:
+        postfix =  path_to_save_csv_file.split('/')[-1]
+        copy2(path_to_save_csv_file,os.path.join("/gpfs/gpfs0/gasanov_lab/WOFOST/weather_problems", postfix))
+        print('Weather error', postfix)
+        return {"Message": "Weather error"}
 
 
 def run_wofost(
@@ -127,6 +134,8 @@ def run_wofost(
         TimedEvents: null
         StateEvents: null
     """
+    """
+    """
     agro = yaml.safe_load(agro_yaml)
 
     firstkey = list(agro[0])[0]
@@ -168,6 +177,8 @@ def getCropCalendar(crop: str, year: str) -> dict:
 def computeCrop(general_df: pd.DataFrame, weather_fname: str, uuid_code: str):
     cols = ["crop", "year", "WOFOST_FLD", "weather_uuid"]
     weather = prepareWeather(weather_fname)
+    if type(weather) == dict:
+        return general_df
     df = pd.DataFrame(columns=cols)
 
     cropsDict = {
@@ -190,7 +201,7 @@ def computeCrop(general_df: pd.DataFrame, weather_fname: str, uuid_code: str):
                 crop_variety=cropsDict[crop],
                 crop_end_type="harvest",
             )
-            water_limited_df = pd.DataFrame(crop_model_yield["FLD"])
+            # water_limited_df = pd.DataFrame(crop_model_yield["FLD"])
             water_limited_yield = crop_model_yield["FLD"][-1]["TWSO"]
             df.loc[len(df)] = [crop, year, water_limited_yield, uuid_code]
     return pd.concat([general_df, df])
@@ -207,11 +218,23 @@ def checkVAP(df: pd.DataFrame) -> pd.DataFrame:
     df = df.applymap(lambda x: 199.3 - 1 if x > 199.3 else x)
     return df
 
+def checkWind(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.applymap(lambda x: 0.07 if x < 0.00 else x)
+    return df
 
 def product_columns(n: int, x1: int, x2: int):
     logging.info(f"Compute weather scenarios: {x1} {x2}")
     print(f"Compute weather scenarios: {x1} {x2}")
     cols = ["crop", "year", "WOFOST_FLD", "weather_uuid"]
+
+    try:
+        dirname_out = "/gpfs/gpfs0/gasanov_lab/WOFOST/"
+        valid_df = pd.read_csv(os.path.join(dirname_out, f"WOFOST_{x1}_{x2}.csv"))
+        if len(valid_df)==96000:
+            print('All simulations done!')
+            return 'Finished'
+    except Exception as e:
+        pass
     general_df = pd.DataFrame(columns=cols)
     dirname = "/trinity/home/m.gasanov/agriculture/3s-Article/predicted_weather/"
     logging.info("Read weather files")
@@ -221,11 +244,13 @@ def product_columns(n: int, x1: int, x2: int):
     tmax = pd.read_csv(os.path.join(dirname, "interval_data/tmax.csv"))
     vap = pd.read_csv(os.path.join(dirname, "interval_data/vap.csv"))
     vap = checkVAP(vap)
-    wind = pd.read_csv(os.path.join(dirname, "interval_data/wind.csv"))
+    wind = pd.read_csv(os.path.join(dirname, 'interval_data/wind.csv'))
+    wind = checkWind(wind)
     rain = pd.read_csv(os.path.join(dirname, "interval_data/rain.csv"))
     low = pd.read_csv(os.path.join(dirname, "prophet_low.csv"))
+    folder_temp_weather = f'/gpfs/gpfs0/gasanov_lab/WOFOST/weather/weather_{x1}{x2}'
+    os.makedirs(folder_temp_weather,exist_ok=True)
     for x3 in range(n + 1):
-
         for x4 in range(n + 1):
             for x5 in range(n + 1):
                 for x6 in range(n + 1):
@@ -238,9 +263,8 @@ def product_columns(n: int, x1: int, x2: int):
                     tmp["RAIN"] = rain[f"RAIN_{x6}"]
                     tmp["SNOWDEPTH"] = low[["SNOWDEPTH"]]
                     fname = os.path.join(
-                        dirname, f"interval_data/{x1}_{x2}_{x3}_{x4}_{x5}_{x6}.csv"
+                        folder_temp_weather, f"{x1}_{x2}_{x3}_{x4}_{x5}_{x6}.csv"
                     )
-
                     weather_uuid = f"{x1}_{x2}_{x3}_{x4}_{x5}_{x6}"
                     tmp.to_csv(fname, index=False)
 
@@ -249,7 +273,9 @@ def product_columns(n: int, x1: int, x2: int):
                         weather_fname=fname,
                         uuid_code=weather_uuid,
                     )
-                    os.remove(fname)
+                    #os.remove(fname)
+                    #path_to_WOFOST_weather = os.path.splitext(fname)[0] + "_WOFOST.csv"
+                    #os.remove(path_to_WOFOST_weather)
                     # save data
                     if len(general_df) % 1000 == 0:
                         dirname_out = "/gpfs/gpfs0/gasanov_lab/WOFOST/"

@@ -1,0 +1,9 @@
+#!/bin/bash
+#SBATCH --job-name=45_WOFOST.job
+#SBATCH --output=/trinity/home/m.gasanov/agriculture/3s-Article/.out/OUT_45.out
+#SBATCH --error=/trinity/home/m.gasanov/agriculture/3s-Article/.out/ERR_45.err
+#SBATCH --time=1-00:00
+#SBATCH --mem=8000
+#SBATCH --ntasks=1
+#SBATCH --partition=cpu
+/trinity/shared/opt/python-3.6.8/bin/python3.6 /trinity/home/m.gasanov/agriculture/3s-Article/run_wofost.py --x1 4 --x2 5
