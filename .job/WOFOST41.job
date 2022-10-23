@@ -2,10 +2,8 @@
 #SBATCH --job-name=41_WOFOST.job
 #SBATCH --output=/trinity/home/m.gasanov/agriculture/3s-Article/.out/OUT_41.out
 #SBATCH --error=/trinity/home/m.gasanov/agriculture/3s-Article/.out/ERR_41.err
-#SBATCH --time=2-00:00
-#SBATCH --mem=12000
+#SBATCH --time=1-00:00
+#SBATCH --mem=8000
 #SBATCH --ntasks=1
-#SBATCH --partition=cpu 
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=m.gasanov@skoltech.ru
-/trinity/shared/opt/python-3.6.8/bin/python3.6 /trinity/home/m.gasanov/agriculture/3s-Article/run_wofost.py --x1 4 --x2 4
+#SBATCH --partition=cpu
+/trinity/shared/opt/python-3.6.8/bin/python3.6 /trinity/home/m.gasanov/agriculture/3s-Article/run_wofost.py --x1 4 --x2 1

@@ -1,9 +1,11 @@
+from shutil import ExecError
 import numpy as np
 import os, yaml
 import datetime as dt
 from dateutil.parser import parse
 import pandas as pd
 import logging
+from shutil import copy2
 
 # Plotting
 import datetime as dt
@@ -50,10 +52,14 @@ def prepareWeather(in_fname: str):
     weather_df.to_csv(
         path_to_save_csv_file, mode="a", header=False, index=False, na_rep="NaN"
     )
-    weather = CSVWeatherDataProvider(path_to_save_csv_file, force_reload=True)
-    
-    # os.remove(path_to_save_csv_file)
-    return weather
+    try: 
+        weather = CSVWeatherDataProvider(path_to_save_csv_file, force_reload=True)
+        return weather
+    except Exception as e:
+        postfix =  path_to_save_csv_file.split('/')[-1]
+        copy2(path_to_save_csv_file,os.path.join("/gpfs/gpfs0/gasanov_lab/WOFOST/weather_problems", postfix))
+        print('Weather error', postfix)
+        return {"Message": "Weather error"}
 
 
 def run_wofost(
@@ -171,6 +177,8 @@ def getCropCalendar(crop: str, year: str) -> dict:
 def computeCrop(general_df: pd.DataFrame, weather_fname: str, uuid_code: str):
     cols = ["crop", "year", "WOFOST_FLD", "weather_uuid"]
     weather = prepareWeather(weather_fname)
+    if type(weather) == dict:
+        return general_df
     df = pd.DataFrame(columns=cols)
 
     cropsDict = {
@@ -240,6 +248,8 @@ def product_columns(n: int, x1: int, x2: int):
     wind = checkWind(wind)
     rain = pd.read_csv(os.path.join(dirname, "interval_data/rain.csv"))
     low = pd.read_csv(os.path.join(dirname, "prophet_low.csv"))
+    folder_temp_weather = f'/gpfs/gpfs0/gasanov_lab/WOFOST/weather/weather_{x1}{x2}'
+    os.makedirs(folder_temp_weather,exist_ok=True)
     for x3 in range(n + 1):
         for x4 in range(n + 1):
             for x5 in range(n + 1):
@@ -252,12 +262,9 @@ def product_columns(n: int, x1: int, x2: int):
                     tmp["WIND"] = wind[f"WIND_{x5}"]
                     tmp["RAIN"] = rain[f"RAIN_{x6}"]
                     tmp["SNOWDEPTH"] = low[["SNOWDEPTH"]]
-                    folder_temp_weather = '/gpfs/data/gpfs0/gasanov_lab/WOFOST/weather'
-                    os.makedirs(f'/gpfs/gpfs0/gasanov_lab/WOFOST/weather/weather_{x1}{x2}',exist_ok=True)
                     fname = os.path.join(
-                        folder_temp_weather, f"weather_{x1}{x2}/{x1}_{x2}_{x3}_{x4}_{x5}_{x6}.csv"
+                        folder_temp_weather, f"{x1}_{x2}_{x3}_{x4}_{x5}_{x6}.csv"
                     )
-
                     weather_uuid = f"{x1}_{x2}_{x3}_{x4}_{x5}_{x6}"
                     tmp.to_csv(fname, index=False)
 

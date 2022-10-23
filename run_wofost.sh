@@ -2,8 +2,8 @@
 # We assume running this from the script directory
 job_directory=$PWD/.job
 # data_dir="${SCRATCH}/project/LizardLips"
-for i in {0..3};do
-    for j in {0..3};do
+for i in {4..8};do
+    for j in {1..3};do
         echo $i $j
         job_file="${job_directory}/WOFOST${i}${j}.job"
 
@@ -14,10 +14,8 @@ for i in {0..3};do
 #SBATCH --time=1-00:00
 #SBATCH --mem=8000
 #SBATCH --ntasks=1
-#SBATCH --partition=cpu 
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=m.gasanov@skoltech.ru
-/trinity/shared/opt/python-3.6.8/bin/python3.6 $HOME/agriculture/3s-Article/run_wofost.py --x1 ${i} --x2 ${i}" > $job_file
+#SBATCH --partition=cpu
+/trinity/shared/opt/python-3.6.8/bin/python3.6 $HOME/agriculture/3s-Article/run_wofost.py --x1 ${i} --x2 ${j}" > $job_file
     sbatch $job_file
     done
 done
